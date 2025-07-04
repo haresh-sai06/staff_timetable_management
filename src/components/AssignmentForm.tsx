@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
@@ -19,7 +21,6 @@ export default function AssignmentForm() {
   const subjects = useQuery(api.subjects.list);
   const createAssignment = useMutation(api.timetable.create);
 
-  // Real-time conflict checking
   const conflict = useQuery(
     api.timetable.checkConflict,
     staffId && day && period
@@ -60,7 +61,6 @@ export default function AssignmentForm() {
         classroom: classroom || undefined,
       });
 
-      // Reset form
       setStaffId("");
       setSubjectId("");
       setDay("");
@@ -84,7 +84,6 @@ export default function AssignmentForm() {
       <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Assignment</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Staff Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Staff Member *
@@ -92,7 +91,7 @@ export default function AssignmentForm() {
           <select
             value={staffId}
             onChange={(e) => setStaffId(e.target.value as Id<"staff"> | "")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
             <option value="">Select Staff</option>
@@ -104,7 +103,6 @@ export default function AssignmentForm() {
           </select>
         </div>
 
-        {/* Subject Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Subject *
@@ -112,7 +110,7 @@ export default function AssignmentForm() {
           <select
             value={subjectId}
             onChange={(e) => setSubjectId(e.target.value as Id<"subjects"> | "")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
             <option value="">Select Subject</option>
@@ -124,7 +122,6 @@ export default function AssignmentForm() {
           </select>
         </div>
 
-        {/* Day Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Day *
@@ -132,7 +129,7 @@ export default function AssignmentForm() {
           <select
             value={day}
             onChange={(e) => setDay(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
             <option value="">Select Day</option>
@@ -144,7 +141,6 @@ export default function AssignmentForm() {
           </select>
         </div>
 
-        {/* Period Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Period *
@@ -152,7 +148,7 @@ export default function AssignmentForm() {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value ? Number(e.target.value) : "")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
             <option value="">Select Period</option>
@@ -164,7 +160,6 @@ export default function AssignmentForm() {
           </select>
         </div>
 
-        {/* Classroom */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Classroom
@@ -174,12 +169,11 @@ export default function AssignmentForm() {
             value={classroom}
             onChange={(e) => setClassroom(e.target.value)}
             placeholder="e.g., Room 101"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
 
-      {/* Validation Messages */}
       {staffId && day && dailyLimit && (
         <div className="mt-3 text-sm">
           <span className={`${dailyLimit.canAdd ? "text-green-600" : "text-red-600"}`}>

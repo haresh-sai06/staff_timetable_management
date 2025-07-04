@@ -2,12 +2,30 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+async function requireAdmin(ctx: any) {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) throw new Error("Must be authenticated");
+
+  const authUser = await ctx.db.get(userId);
+  if (!authUser?.email) throw new Error("User email required");
+
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_email", (q: any) => q.eq("email", authUser.email))
+    .first();
+
+  if (!user || user.role !== "admin") {
+    throw new Error("Admin access required");
+  }
+
+  return user;
+}
+
 export const list = query({
   args: {},
   handler: async (ctx) => {
     const assignments = await ctx.db.query("timetableAssignments").collect();
     
-    // Enrich with staff and subject details
     const enrichedAssignments = await Promise.all(
       assignments.map(async (assignment) => {
         const staff = await ctx.db.get(assignment.staffId);
@@ -35,7 +53,7 @@ export const checkConflict = query({
   handler: async (ctx, args) => {
     const existingAssignment = await ctx.db
       .query("timetableAssignments")
-      .withIndex("by_staff_day_period", (q) =>
+      .withIndex("by_staff_day_period", (q: any) =>
         q.eq("staffId", args.staffId).eq("day", args.day).eq("period", args.period)
       )
       .first();
@@ -73,8 +91,8 @@ export const checkStaffDailyLimit = query({
 
     const assignments = await ctx.db
       .query("timetableAssignments")
-      .withIndex("by_staff", (q) => q.eq("staffId", args.staffId))
-      .filter((q) => q.eq(q.field("day"), args.day))
+      .withIndex("by_staff", (q: any) => q.eq("staffId", args.staffId))
+      .filter((q: any) => q.eq(q.field("day"), args.day))
       .collect();
 
     const filteredAssignments = args.excludeId
@@ -98,15 +116,11 @@ export const create = mutation({
     classroom: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Must be authenticated");
-    }
+    const user = await requireAdmin(ctx);
 
-    // Check for conflicts
     const conflict = await ctx.db
       .query("timetableAssignments")
-      .withIndex("by_staff_day_period", (q) =>
+      .withIndex("by_staff_day_period", (q: any) =>
         q.eq("staffId", args.staffId).eq("day", args.day).eq("period", args.period)
       )
       .first();
@@ -115,7 +129,6 @@ export const create = mutation({
       throw new Error("Staff already has an assignment at this time slot");
     }
 
-    // Check daily limit
     const staff = await ctx.db.get(args.staffId);
     if (!staff) {
       throw new Error("Staff not found");
@@ -123,8 +136,8 @@ export const create = mutation({
 
     const dailyAssignments = await ctx.db
       .query("timetableAssignments")
-      .withIndex("by_staff", (q) => q.eq("staffId", args.staffId))
-      .filter((q) => q.eq(q.field("day"), args.day))
+      .withIndex("by_staff", (q: any) => q.eq("staffId", args.staffId))
+      .filter((q: any) => q.eq(q.field("day"), args.day))
       .collect();
 
     if (dailyAssignments.length >= staff.maxPeriodsPerDay) {
@@ -133,7 +146,7 @@ export const create = mutation({
 
     return await ctx.db.insert("timetableAssignments", {
       ...args,
-      createdBy: userId,
+      createdBy: user._id,
     });
   },
 });
@@ -141,11 +154,7 @@ export const create = mutation({
 export const remove = mutation({
   args: { id: v.id("timetableAssignments") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Must be authenticated");
-    }
-
+    await requireAdmin(ctx);
     await ctx.db.delete(args.id);
   },
 });
@@ -159,7 +168,6 @@ export const getWeeklySchedule = query({
     const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
     const periods = [1, 2, 3, 4, 5, 6, 7, 8];
 
-    // Initialize schedule structure
     days.forEach(day => {
       schedule[day] = {};
       periods.forEach(period => {
@@ -167,7 +175,6 @@ export const getWeeklySchedule = query({
       });
     });
 
-    // Populate schedule with assignments
     for (const assignment of assignments) {
       const staff = await ctx.db.get(assignment.staffId);
       const subject = await ctx.db.get(assignment.subjectId);

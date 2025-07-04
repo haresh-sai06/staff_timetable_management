@@ -1,12 +1,20 @@
+"use client";
+
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 
-export default function AssignmentsList() {
+interface AssignmentsListProps {
+  isAdmin: boolean;
+}
+
+export default function AssignmentsList({ isAdmin }: AssignmentsListProps) {
   const assignments = useQuery(api.timetable.list);
   const removeAssignment = useMutation(api.timetable.remove);
 
   const handleRemove = async (id: string) => {
+    if (!isAdmin) return;
+    
     if (!confirm("Are you sure you want to remove this assignment?")) {
       return;
     }
@@ -31,12 +39,11 @@ export default function AssignmentsList() {
     return (
       <div className="text-center py-8 text-gray-500">
         <p>No assignments created yet.</p>
-        <p className="text-sm mt-1">Use the form above to create your first assignment.</p>
+        {isAdmin && <p className="text-sm mt-1">Use the form above to create your first assignment.</p>}
       </div>
     );
   }
 
-  // Group assignments by day
   const groupedAssignments = assignments.reduce((acc, assignment) => {
     if (!acc[assignment.day]) {
       acc[assignment.day] = [];
@@ -53,7 +60,6 @@ export default function AssignmentsList() {
         const dayAssignments = groupedAssignments[day] || [];
         if (dayAssignments.length === 0) return null;
 
-        // Sort by period
         const sortedAssignments = dayAssignments.sort((a, b) => a.period - b.period);
 
         return (
@@ -77,13 +83,15 @@ export default function AssignmentsList() {
                         {assignment.subjectName} ({assignment.subjectCode})
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleRemove(assignment._id)}
-                      className="text-red-500 hover:text-red-700 text-sm font-medium"
-                      title="Remove assignment"
-                    >
-                      Remove
-                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleRemove(assignment._id)}
+                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                        title="Remove assignment"
+                      >
+                        Remove
+                      </button>
+                    )}
                   </div>
                   
                   <div className="space-y-1 text-sm">

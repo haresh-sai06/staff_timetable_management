@@ -3,6 +3,12 @@ import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 
 const applicationTables = {
+  users: defineTable({
+    email: v.string(),
+    role: v.optional(v.union(v.literal("user"), v.literal("admin"))),
+    name: v.optional(v.string()),
+  }).index("by_email", ["email"]),
+
   staff: defineTable({
     name: v.string(),
     email: v.string(),
@@ -21,14 +27,27 @@ const applicationTables = {
   timetableAssignments: defineTable({
     staffId: v.id("staff"),
     subjectId: v.id("subjects"),
-    day: v.string(), // "Monday", "Tuesday", etc.
-    period: v.number(), // 1, 2, 3, etc.
+    day: v.string(),
+    period: v.number(),
     classroom: v.optional(v.string()),
     createdBy: v.id("users"),
   })
     .index("by_staff_day_period", ["staffId", "day", "period"])
     .index("by_day_period", ["day", "period"])
     .index("by_staff", ["staffId"]),
+
+  reports: defineTable({
+    userId: v.id("users"),
+    issueType: v.string(),
+    description: v.string(),
+    reason: v.string(),
+    status: v.union(v.literal("pending"), v.literal("resolved")),
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+    resolvedBy: v.optional(v.id("users")),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"]),
 };
 
 export default defineSchema({

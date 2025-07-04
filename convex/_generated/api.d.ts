@@ -15,10 +15,12 @@ import type {
 } from "convex/server";
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
+import type * as reports from "../reports.js";
 import type * as router from "../router.js";
 import type * as staff from "../staff.js";
 import type * as subjects from "../subjects.js";
 import type * as timetable from "../timetable.js";
+import type * as users from "../users.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -31,10 +33,12 @@ import type * as timetable from "../timetable.js";
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   http: typeof http;
+  reports: typeof reports;
   router: typeof router;
   staff: typeof staff;
   subjects: typeof subjects;
   timetable: typeof timetable;
+  users: typeof users;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

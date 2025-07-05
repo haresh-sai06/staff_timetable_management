@@ -33,7 +33,7 @@ export default function WeeklyScheduleGrid({ isAdmin }: WeeklyScheduleGridProps)
   if (!schedule) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
       </div>
     );
   }
@@ -42,11 +42,11 @@ export default function WeeklyScheduleGrid({ isAdmin }: WeeklyScheduleGridProps)
     <div className="overflow-x-auto">
       <div className="min-w-full">
         <div className="grid grid-cols-6 gap-1 mb-2">
-          <div className="p-2 font-semibold text-center bg-gray-100 rounded">
+          <div className="p-2 font-semibold text-center bg-gray-800 text-gray-100 rounded">
             Period
           </div>
           {DAYS.map((day) => (
-            <div key={day} className="p-2 font-semibold text-center bg-gray-100 rounded">
+            <div key={day} className="p-2 font-semibold text-center bg-gray-800 text-gray-100 rounded">
               {day}
             </div>
           ))}
@@ -54,25 +54,25 @@ export default function WeeklyScheduleGrid({ isAdmin }: WeeklyScheduleGridProps)
 
         {PERIODS.map((period) => (
           <div key={period} className="grid grid-cols-6 gap-1 mb-1">
-            <div className="p-2 text-center bg-gray-50 rounded font-medium">
+            <div className="p-2 text-center bg-gray-700 text-gray-100 rounded font-medium">
               {period}
             </div>
             
             {DAYS.map((day) => (
-              <div key={`${day}-${period}`} className="min-h-[80px] p-1 bg-white border rounded">
+              <div key={`${day}-${period}`} className="min-h-[80px] p-1 bg-gray-900 border border-gray-700 rounded">
                 {schedule[day]?.[period]?.map((assignment: any) => (
                   <div
                     key={assignment._id}
-                    className="mb-1 p-2 bg-blue-50 border border-blue-200 rounded text-xs group relative"
+                    className="mb-1 p-2 bg-blue-900 border border-blue-700 rounded text-xs group relative"
                   >
-                    <div className="font-medium text-blue-900">
+                    <div className="font-medium text-blue-200">
                       {assignment.subjectCode}
                     </div>
-                    <div className="text-blue-700 truncate">
+                    <div className="text-blue-300 truncate">
                       {assignment.staffName}
                     </div>
                     {assignment.classroom && (
-                      <div className="text-blue-600 text-xs">
+                      <div className="text-blue-400 text-xs">
                         {assignment.classroom}
                       </div>
                     )}
@@ -80,14 +80,14 @@ export default function WeeklyScheduleGrid({ isAdmin }: WeeklyScheduleGridProps)
                     {isAdmin && (
                       <button
                         onClick={() => handleRemoveAssignment(assignment._id)}
-                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs hover:bg-red-600"
+                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs hover:bg-red-700"
                         title="Remove assignment"
                       >
                         ×
                       </button>
                     )}
                     
-                    <div className="absolute z-10 invisible group-hover:visible bg-gray-900 text-white text-xs rounded py-1 px-2 -top-8 left-0 whitespace-nowrap">
+                    <div className="absolute z-10 invisible group-hover:visible bg-gray-800 text-gray-100 text-xs rounded py-1 px-2 -top-8 left-0 whitespace-nowrap">
                       {assignment.subjectName} - {assignment.staffName}
                       {assignment.classroom && ` (${assignment.classroom})`}
                     </div>
@@ -99,9 +99,9 @@ export default function WeeklyScheduleGrid({ isAdmin }: WeeklyScheduleGridProps)
         ))}
       </div>
 
-      <div className="mt-4 p-3 bg-gray-50 rounded">
-        <h4 className="font-medium text-gray-900 mb-2">Legend</h4>
-        <div className="text-sm text-gray-600 space-y-1">
+      <div className="mt-4 p-3 bg-gray-800 rounded border border-gray-700">
+        <h4 className="font-medium text-gray-100 mb-2">Legend</h4>
+        <div className="text-sm text-gray-300 space-y-1">
           <div>• Hover over assignments to see full details</div>
           {isAdmin && <div>• Click × to remove an assignment</div>}
           <div>• Empty cells indicate available time slots</div>

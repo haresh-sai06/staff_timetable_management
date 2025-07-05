@@ -29,7 +29,7 @@ export default function SplineViewer() {
   }, []);
 
   return (
-    <div className="w-full h-full relative rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100 spline-container">
+    <div className="w-full h-full relative rounded-lg overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 spline-container">
       <canvas
         ref={canvasRef}
         className="w-full h-full"

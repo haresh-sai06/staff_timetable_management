@@ -42,21 +42,21 @@ export default function SubjectManagement({ isAdmin }: SubjectManagementProps) {
     <div className="space-y-6">
       {/* Add Subject Form - Only for Admins */}
       {isAdmin && (
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-lg border border-gray-700">
           {!isAdding ? (
             <button
               onClick={() => setIsAdding(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+              className="px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 font-medium"
             >
               + Add New Subject
             </button>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Add New Subject</h3>
+              <h3 className="text-lg font-medium text-gray-100">Add New Subject</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Subject Name *
                   </label>
                   <input
@@ -64,13 +64,13 @@ export default function SubjectManagement({ isAdmin }: SubjectManagementProps) {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g., Advanced Mathematics"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Subject Code *
                   </label>
                   <input
@@ -78,19 +78,19 @@ export default function SubjectManagement({ isAdmin }: SubjectManagementProps) {
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                     placeholder="e.g., MATH101"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Department *
                   </label>
                   <select
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   >
                     <option value="">Select Department</option>
@@ -108,7 +108,7 @@ export default function SubjectManagement({ isAdmin }: SubjectManagementProps) {
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+                  className="px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 font-medium"
                 >
                   Add Subject
                 </button>
@@ -118,7 +118,7 @@ export default function SubjectManagement({ isAdmin }: SubjectManagementProps) {
                     setIsAdding(false);
                     setFormData({ name: "", code: "", department: "" });
                   }}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 font-medium"
+                  className="px-4 py-2 bg-gray-600 text-gray-200 rounded-md hover:bg-gray-700 font-medium"
                 >
                   Cancel
                 </button>
@@ -130,32 +130,32 @@ export default function SubjectManagement({ isAdmin }: SubjectManagementProps) {
 
       {/* Subjects List */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <h3 className="text-lg font-medium text-gray-100 mb-4">
           {isAdmin ? "Current Subjects" : "Subject Directory"} ({subjects?.length || 0})
         </h3>
         
         {!subjects ? (
           <div className="flex justify-center items-center h-32">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
           </div>
         ) : subjects.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-400">
             <p>No subjects added yet.</p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {subjects.map((subject) => (
-              <div key={subject._id} className="bg-white p-4 rounded-lg border shadow-sm">
+              <div key={subject._id} className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-sm">
                 <div className="space-y-2">
                   <div>
-                    <div className="font-medium text-gray-900">{subject.name}</div>
-                    <div className="text-sm text-gray-600 font-mono">{subject.code}</div>
+                    <div className="font-medium text-gray-100">{subject.name}</div>
+                    <div className="text-sm text-gray-400 font-mono">{subject.code}</div>
                   </div>
                   
                   <div className="text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Department:</span>
-                      <span className="font-medium">{subject.department}</span>
+                      <span className="text-gray-400">Department:</span>
+                      <span className="font-medium text-gray-200">{subject.department}</span>
                     </div>
                   </div>
                 </div>

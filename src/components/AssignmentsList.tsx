@@ -30,14 +30,14 @@ export default function AssignmentsList({ isAdmin }: AssignmentsListProps) {
   if (!assignments) {
     return (
       <div className="flex justify-center items-center h-32">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
       </div>
     );
   }
 
   if (assignments.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-gray-400">
         <p>No assignments created yet.</p>
         {isAdmin && <p className="text-sm mt-1">Use the form above to create your first assignment.</p>}
       </div>
@@ -63,8 +63,8 @@ export default function AssignmentsList({ isAdmin }: AssignmentsListProps) {
         const sortedAssignments = dayAssignments.sort((a, b) => a.period - b.period);
 
         return (
-          <div key={day} className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+          <div key={day} className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-4 border border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-100 mb-3">
               {day} ({sortedAssignments.length} assignments)
             </h3>
             
@@ -72,21 +72,21 @@ export default function AssignmentsList({ isAdmin }: AssignmentsListProps) {
               {sortedAssignments.map((assignment) => (
                 <div
                   key={assignment._id}
-                  className="bg-white p-4 rounded-lg border shadow-sm hover:shadow-md transition-shadow"
+                  className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
-                      <div className="font-medium text-gray-900">
+                      <div className="font-medium text-gray-100">
                         Period {assignment.period}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-400">
                         {assignment.subjectName} ({assignment.subjectCode})
                       </div>
                     </div>
                     {isAdmin && (
                       <button
                         onClick={() => handleRemove(assignment._id)}
-                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                        className="text-red-400 hover:text-red-500 text-sm font-medium"
                         title="Remove assignment"
                       >
                         Remove
@@ -95,12 +95,12 @@ export default function AssignmentsList({ isAdmin }: AssignmentsListProps) {
                   </div>
                   
                   <div className="space-y-1 text-sm">
-                    <div className="flex items-center text-gray-600">
+                    <div className="flex items-center text-gray-400">
                       <span className="w-16">Staff:</span>
-                      <span className="font-medium">{assignment.staffName}</span>
+                      <span className="font-medium text-gray-200">{assignment.staffName}</span>
                     </div>
                     {assignment.classroom && (
-                      <div className="flex items-center text-gray-600">
+                      <div className="flex items-center text-gray-400">
                         <span className="w-16">Room:</span>
                         <span>{assignment.classroom}</span>
                       </div>
@@ -114,7 +114,7 @@ export default function AssignmentsList({ isAdmin }: AssignmentsListProps) {
       })}
 
       {Object.keys(groupedAssignments).length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-400">
           <p>No assignments found.</p>
         </div>
       )}

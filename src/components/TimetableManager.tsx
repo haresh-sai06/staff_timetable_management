@@ -13,10 +13,10 @@ interface TimetableManagerProps {
 
 export default function TimetableManager({ activeTab, isAdmin }: TimetableManagerProps) {
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg border border-gray-700">
       {activeTab === "schedule" && (
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Weekly Schedule</h2>
+          <h2 className="text-xl font-semibold text-gray-100 mb-4">Weekly Schedule</h2>
           {isAdmin && (
             <div className="mb-6">
               <AssignmentForm />
@@ -28,14 +28,14 @@ export default function TimetableManager({ activeTab, isAdmin }: TimetableManage
 
       {activeTab === "assignments" && (
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">All Assignments</h2>
+          <h2 className="text-xl font-semibold text-gray-100 mb-4">All Assignments</h2>
           <AssignmentsList isAdmin={isAdmin} />
         </div>
       )}
 
       {activeTab === "staff" && (
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-gray-100 mb-4">
             {isAdmin ? "Staff Management" : "Staff Directory"}
           </h2>
           <StaffManagement isAdmin={isAdmin} />
@@ -44,7 +44,7 @@ export default function TimetableManager({ activeTab, isAdmin }: TimetableManage
 
       {activeTab === "subjects" && (
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-gray-100 mb-4">
             {isAdmin ? "Subject Management" : "Subject Directory"}
           </h2>
           <SubjectManagement isAdmin={isAdmin} />

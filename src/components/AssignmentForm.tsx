@@ -80,18 +80,18 @@ export default function AssignmentForm() {
   const canSubmit = staffId && subjectId && day && period && !hasConflict && !exceedsLimit;
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg border">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Assignment</h3>
+    <form onSubmit={handleSubmit} className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-lg border border-gray-700">
+      <h3 className="text-lg font-medium text-gray-100 mb-4">Create New Assignment</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-300 mb-1">
             Staff Member *
           </label>
           <select
             value={staffId}
             onChange={(e) => setStaffId(e.target.value as Id<"staff"> | "")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           >
             <option value="">Select Staff</option>
@@ -104,13 +104,13 @@ export default function AssignmentForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-300 mb-1">
             Subject *
           </label>
           <select
             value={subjectId}
             onChange={(e) => setSubjectId(e.target.value as Id<"subjects"> | "")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           >
             <option value="">Select Subject</option>
@@ -123,13 +123,13 @@ export default function AssignmentForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-300 mb-1">
             Day *
           </label>
           <select
             value={day}
             onChange={(e) => setDay(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           >
             <option value="">Select Day</option>
@@ -142,13 +142,13 @@ export default function AssignmentForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-300 mb-1">
             Period *
           </label>
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value ? Number(e.target.value) : "")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           >
             <option value="">Select Period</option>
@@ -161,7 +161,7 @@ export default function AssignmentForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-300 mb-1">
             Classroom
           </label>
           <input
@@ -169,22 +169,22 @@ export default function AssignmentForm() {
             value={classroom}
             onChange={(e) => setClassroom(e.target.value)}
             placeholder="e.g., Room 101"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
       </div>
 
       {staffId && day && dailyLimit && (
         <div className="mt-3 text-sm">
-          <span className={`${dailyLimit.canAdd ? "text-green-600" : "text-red-600"}`}>
+          <span className={`${dailyLimit.canAdd ? "text-green-400" : "text-red-400"}`}>
             Daily periods: {dailyLimit.currentCount}/{dailyLimit.maxAllowed}
           </span>
         </div>
       )}
 
       {hasConflict && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-600">
+        <div className="mt-3 p-3 bg-red-900 border border-red-700 rounded-md">
+          <p className="text-sm text-red-200">
             ⚠️ Conflict detected: Staff already teaching {conflict.conflictWith?.subject} at this time
             {conflict.conflictWith?.classroom && ` in ${conflict.conflictWith.classroom}`}
           </p>
@@ -192,8 +192,8 @@ export default function AssignmentForm() {
       )}
 
       {exceedsLimit && (
-        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-          <p className="text-sm text-yellow-600">
+        <div className="mt-3 p-3 bg-yellow-900 border border-yellow-700 rounded-md">
+          <p className="text-sm text-yellow-200">
             ⚠️ Staff has reached maximum periods per day ({dailyLimit?.maxAllowed})
           </p>
         </div>
@@ -205,8 +205,8 @@ export default function AssignmentForm() {
           disabled={!canSubmit || isSubmitting}
           className={`px-4 py-2 rounded-md font-medium ${
             canSubmit && !isSubmitting
-              ? "bg-blue-600 text-white hover:bg-blue-700"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              ? "bg-blue-700 text-white hover:bg-blue-800"
+              : "bg-gray-600 text-gray-400 cursor-not-allowed"
           }`}
         >
           {isSubmitting ? "Creating..." : "Create Assignment"}

@@ -4,68 +4,98 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import { Id } from "../../convex/_generated/dataModel";
+import { AlertTriangle, CheckCircle, Clock, Users, MapPin } from "lucide-react";
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8];
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const TIME_SLOTS = [
+  "08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00",
+  "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00", "16:00-17:00"
+];
 
-export default function AssignmentForm() {
+interface AssignmentFormProps {
+  selectedDepartment: string;
+  selectedSemester: "odd" | "even";
+}
+
+export default function AssignmentForm({ selectedDepartment, selectedSemester }: AssignmentFormProps) {
   const [staffId, setStaffId] = useState<Id<"staff"> | "">("");
   const [subjectId, setSubjectId] = useState<Id<"subjects"> | "">("");
+  const [classroomId, setClassroomId] = useState<Id<"classrooms"> | "">("");
   const [day, setDay] = useState("");
-  const [period, setPeriod] = useState<number | "">("");
-  const [classroom, setClassroom] = useState("");
+  const [timeSlot, setTimeSlot] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const staff = useQuery(api.staff.list);
-  const subjects = useQuery(api.subjects.list);
+  const staff = useQuery(api.staff.list, { department: selectedDepartment });
+  const subjects = useQuery(api.subjects.list, { 
+    department: selectedDepartment, 
+    semester: selectedSemester 
+  });
+  const classrooms = useQuery(api.classrooms.list);
   const createAssignment = useMutation(api.timetable.create);
+  const checkConflicts = useMutation(api.timetable.checkConflicts);
 
-  const conflict = useQuery(
-    api.timetable.checkConflict,
-    staffId && day && period
-      ? { staffId: staffId as Id<"staff">, day, period: period as number }
+  const staffWorkload = useQuery(
+    api.staff.getWorkload,
+    staffId && selectedDepartment && selectedSemester
+      ? { staffId: staffId as Id<"staff">, department: selectedDepartment, semester: selectedSemester }
       : "skip"
   );
 
-  const dailyLimit = useQuery(
-    api.timetable.checkStaffDailyLimit,
-    staffId && day ? { staffId: staffId as Id<"staff">, day } : "skip"
+  const classroomAvailability = useQuery(
+    api.classrooms.checkAvailability,
+    classroomId && day && timeSlot
+      ? { classroomId: classroomId as Id<"classrooms">, day, timeSlot }
+      : "skip"
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!staffId || !subjectId || !day || !period) {
+    if (!selectedDepartment || !selectedSemester) {
+      toast.error("Please select department and semester first");
+      return;
+    }
+
+    if (!staffId || !subjectId || !classroomId || !day || !timeSlot) {
       toast.error("Please fill in all required fields");
-      return;
-    }
-
-    if (conflict?.hasConflict) {
-      toast.error(`Conflict detected: Staff already teaching ${conflict.conflictWith?.subject} at this time`);
-      return;
-    }
-
-    if (dailyLimit && !dailyLimit.canAdd) {
-      toast.error(`Staff has reached maximum periods per day (${dailyLimit.maxAllowed})`);
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await createAssignment({
+      // Check conflicts before creating
+      const conflictResult = await checkConflicts({
+        department: selectedDepartment,
+        semester: selectedSemester,
         staffId: staffId as Id<"staff">,
         subjectId: subjectId as Id<"subjects">,
+        classroomId: classroomId as Id<"classrooms">,
         day,
-        period: period as number,
-        classroom: classroom || undefined,
+        timeSlot,
+      });
+
+      if (conflictResult.hasConflicts) {
+        toast.error(`Conflicts detected: ${conflictResult.conflicts.map(c => c.message).join(", ")}`);
+        return;
+      }
+
+      await createAssignment({
+        department: selectedDepartment,
+        semester: selectedSemester,
+        staffId: staffId as Id<"staff">,
+        subjectId: subjectId as Id<"subjects">,
+        classroomId: classroomId as Id<"classrooms">,
+        day,
+        timeSlot,
       });
 
       setStaffId("");
       setSubjectId("");
+      setClassroomId("");
       setDay("");
-      setPeriod("");
-      setClassroom("");
+      setTimeSlot("");
       
       toast.success("Assignment created successfully!");
     } catch (error) {
@@ -75,15 +105,35 @@ export default function AssignmentForm() {
     }
   };
 
-  const hasConflict = conflict?.hasConflict;
-  const exceedsLimit = dailyLimit && !dailyLimit.canAdd;
-  const canSubmit = staffId && subjectId && day && period && !hasConflict && !exceedsLimit;
+  if (!selectedDepartment) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-lg border border-gray-700 text-center"
+      >
+        <AlertTriangle className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+        <p className="text-gray-300">Please select a department to create assignments</p>
+      </motion.div>
+    );
+  }
+
+  const canSubmit = staffId && subjectId && classroomId && day && timeSlot && 
+                   (!classroomAvailability || classroomAvailability.isAvailable);
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-lg border border-gray-700">
-      <h3 className="text-lg font-medium text-gray-100 mb-4">Create New Assignment</h3>
+    <motion.form 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      onSubmit={handleSubmit} 
+      className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-lg border border-gray-700"
+    >
+      <h3 className="text-lg font-medium text-gray-100 mb-4 flex items-center">
+        <Clock className="w-5 h-5 mr-2" />
+        Create New Assignment - {selectedDepartment} ({selectedSemester === "odd" ? "Jul-Dec" : "Jan-Jun"})
+      </h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">
             Staff Member *
@@ -91,13 +141,13 @@ export default function AssignmentForm() {
           <select
             value={staffId}
             onChange={(e) => setStaffId(e.target.value as Id<"staff"> | "")}
-            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
             required
           >
             <option value="">Select Staff</option>
             {staff?.map((member) => (
               <option key={member._id} value={member._id}>
-                {member.name} ({member.department})
+                {member.name} ({member.institutionRole})
               </option>
             ))}
           </select>
@@ -110,13 +160,32 @@ export default function AssignmentForm() {
           <select
             value={subjectId}
             onChange={(e) => setSubjectId(e.target.value as Id<"subjects"> | "")}
-            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
             required
           >
             <option value="">Select Subject</option>
             {subjects?.map((subject) => (
               <option key={subject._id} value={subject._id}>
-                {subject.name} ({subject.code})
+                {subject.name} ({subject.code}) - {subject.type}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1">
+            Classroom *
+          </label>
+          <select
+            value={classroomId}
+            onChange={(e) => setClassroomId(e.target.value as Id<"classrooms"> | "")}
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            required
+          >
+            <option value="">Select Classroom</option>
+            {classrooms?.map((classroom) => (
+              <option key={classroom._id} value={classroom._id}>
+                {classroom.name} ({classroom.type}, {classroom.capacity} seats)
               </option>
             ))}
           </select>
@@ -129,7 +198,7 @@ export default function AssignmentForm() {
           <select
             value={day}
             onChange={(e) => setDay(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
             required
           >
             <option value="">Select Day</option>
@@ -143,75 +212,93 @@ export default function AssignmentForm() {
 
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">
-            Period *
+            Time Slot *
           </label>
           <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value ? Number(e.target.value) : "")}
-            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={timeSlot}
+            onChange={(e) => setTimeSlot(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
             required
           >
-            <option value="">Select Period</option>
-            {PERIODS.map((p) => (
-              <option key={p} value={p}>
-                Period {p}
+            <option value="">Select Time</option>
+            {TIME_SLOTS.map((slot) => (
+              <option key={slot} value={slot}>
+                {slot}
               </option>
             ))}
           </select>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            Classroom
-          </label>
-          <input
-            type="text"
-            value={classroom}
-            onChange={(e) => setClassroom(e.target.value)}
-            placeholder="e.g., Room 101"
-            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-        </div>
       </div>
 
-      {staffId && day && dailyLimit && (
-        <div className="mt-3 text-sm">
-          <span className={`${dailyLimit.canAdd ? "text-green-400" : "text-red-400"}`}>
-            Daily periods: {dailyLimit.currentCount}/{dailyLimit.maxAllowed}
-          </span>
-        </div>
-      )}
+      {/* Status Indicators */}
+      <AnimatePresence>
+        {staffId && staffWorkload && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-4 p-3 bg-gray-700 rounded-md"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-300 flex items-center">
+                <Users className="w-4 h-4 mr-2" />
+                Staff Workload:
+              </span>
+              <div className="flex items-center space-x-2">
+                <div className={`text-sm font-medium ${
+                  staffWorkload.utilizationPercentage > 90 ? "text-red-400" :
+                  staffWorkload.utilizationPercentage > 75 ? "text-yellow-400" : "text-green-400"
+                }`}>
+                  {staffWorkload.currentHours}/{staffWorkload.maxHours} hours ({staffWorkload.utilizationPercentage}%)
+                </div>
+                {staffWorkload.utilizationPercentage <= 90 ? (
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-red-400" />
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
-      {hasConflict && (
-        <div className="mt-3 p-3 bg-red-900 border border-red-700 rounded-md">
-          <p className="text-sm text-red-200">
-            ⚠️ Conflict detected: Staff already teaching {conflict.conflictWith?.subject} at this time
-            {conflict.conflictWith?.classroom && ` in ${conflict.conflictWith.classroom}`}
-          </p>
-        </div>
-      )}
+        {classroomId && day && timeSlot && classroomAvailability && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className={`mb-4 p-3 rounded-md ${
+              classroomAvailability.isAvailable ? "bg-green-900 border border-green-700" : "bg-red-900 border border-red-700"
+            }`}
+          >
+            <div className="flex items-center">
+              <MapPin className="w-4 h-4 mr-2" />
+              {classroomAvailability.isAvailable ? (
+                <span className="text-sm text-green-200">Classroom is available</span>
+              ) : (
+                <span className="text-sm text-red-200">
+                  Classroom occupied by {classroomAvailability.conflictWith?.staff} for {classroomAvailability.conflictWith?.subject}
+                </span>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {exceedsLimit && (
-        <div className="mt-3 p-3 bg-yellow-900 border border-yellow-700 rounded-md">
-          <p className="text-sm text-yellow-200">
-            ⚠️ Staff has reached maximum periods per day ({dailyLimit?.maxAllowed})
-          </p>
-        </div>
-      )}
-
-      <div className="mt-4">
-        <button
+      <div className="flex justify-end">
+        <motion.button
+          whileHover={{ scale: canSubmit ? 1.02 : 1 }}
+          whileTap={{ scale: canSubmit ? 0.98 : 1 }}
           type="submit"
           disabled={!canSubmit || isSubmitting}
-          className={`px-4 py-2 rounded-md font-medium ${
+          className={`px-6 py-2 rounded-md font-medium transition-all ${
             canSubmit && !isSubmitting
-              ? "bg-blue-700 text-white hover:bg-blue-800"
+              ? "bg-blue-700 text-white hover:bg-blue-800 shadow-lg hover:shadow-xl"
               : "bg-gray-600 text-gray-400 cursor-not-allowed"
           }`}
         >
           {isSubmitting ? "Creating..." : "Create Assignment"}
-        </button>
+        </motion.button>
       </div>
-    </form>
+    </motion.form>
   );
 }

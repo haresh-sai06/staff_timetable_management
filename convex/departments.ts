@@ -22,22 +22,9 @@ async function requireAdmin(ctx: any) {
 }
 
 export const list = query({
-  args: {
-    department: v.optional(v.string()),
-    semester: v.optional(v.union(v.literal("odd"), v.literal("even"))),
-  },
-  handler: async (ctx, args) => {
-    let query = ctx.db.query("subjects").filter((q) => q.eq(q.field("isActive"), true));
-    
-    if (args.department && args.semester) {
-      query = query.withIndex("by_department_semester", (q: any) => 
-        q.eq("department", args.department).eq("semester", args.semester)
-      );
-    } else if (args.department) {
-      query = query.filter((q) => q.eq(q.field("department"), args.department));
-    }
-    
-    return await query.collect();
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("departments").filter((q) => q.eq(q.field("isActive"), true)).collect();
   },
 });
 
@@ -45,15 +32,11 @@ export const create = mutation({
   args: {
     name: v.string(),
     code: v.string(),
-    credits: v.number(),
-    semester: v.union(v.literal("odd"), v.literal("even")),
-    department: v.string(),
-    type: v.union(v.literal("theory"), v.literal("lab")),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
 
-    return await ctx.db.insert("subjects", {
+    return await ctx.db.insert("departments", {
       ...args,
       isActive: true,
     });
@@ -62,13 +45,9 @@ export const create = mutation({
 
 export const update = mutation({
   args: {
-    id: v.id("subjects"),
+    id: v.id("departments"),
     name: v.string(),
     code: v.string(),
-    credits: v.number(),
-    semester: v.union(v.literal("odd"), v.literal("even")),
-    department: v.string(),
-    type: v.union(v.literal("theory"), v.literal("lab")),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -79,7 +58,7 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id("subjects") },
+  args: { id: v.id("departments") },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
 

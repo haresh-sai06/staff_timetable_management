@@ -22,9 +22,17 @@ async function requireAdmin(ctx: any) {
 }
 
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("staff").filter((q) => q.eq(q.field("isActive"), true)).collect();
+  args: {
+    department: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let query = ctx.db.query("staff").filter((q) => q.eq(q.field("isActive"), true));
+    
+    if (args.department) {
+      query = query.withIndex("by_department", (q: any) => q.eq("department", args.department));
+    }
+    
+    return await query.collect();
   },
 });
 
@@ -33,13 +41,17 @@ export const create = mutation({
     name: v.string(),
     email: v.string(),
     department: v.string(),
-    maxPeriodsPerDay: v.number(),
+    institutionRole: v.union(v.literal("Assistant Professor"), v.literal("Professor")),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
 
+    // Set max hours based on role
+    const maxHours = args.institutionRole === "Assistant Professor" ? 18 : 12;
+
     return await ctx.db.insert("staff", {
       ...args,
+      maxHours,
       isActive: true,
     });
   },
@@ -52,19 +64,59 @@ export const getById = query({
   },
 });
 
+export const getWorkload = query({
+  args: {
+    staffId: v.id("staff"),
+    department: v.string(),
+    semester: v.union(v.literal("odd"), v.literal("even")),
+  },
+  handler: async (ctx, args) => {
+    const staff = await ctx.db.get(args.staffId);
+    if (!staff) {
+      throw new Error("Staff not found");
+    }
+
+    const assignments = await ctx.db
+      .query("timetableAssignments")
+      .withIndex("by_staff", (q: any) => q.eq("staffId", args.staffId))
+      .filter((q: any) => 
+        q.and(
+          q.eq(q.field("department"), args.department),
+          q.eq(q.field("semester"), args.semester)
+        )
+      )
+      .collect();
+
+    // Calculate total hours (assuming each slot is 1 hour)
+    const totalHours = assignments.length;
+    
+    return {
+      currentHours: totalHours,
+      maxHours: staff.maxHours,
+      remainingHours: staff.maxHours - totalHours,
+      utilizationPercentage: Math.round((totalHours / staff.maxHours) * 100),
+    };
+  },
+});
+
 export const update = mutation({
   args: {
     id: v.id("staff"),
     name: v.string(),
     email: v.string(),
     department: v.string(),
-    maxPeriodsPerDay: v.number(),
+    institutionRole: v.union(v.literal("Assistant Professor"), v.literal("Professor")),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
 
     const { id, ...updateData } = args;
-    await ctx.db.patch(id, updateData);
+    const maxHours = updateData.institutionRole === "Assistant Professor" ? 18 : 12;
+    
+    await ctx.db.patch(id, {
+      ...updateData,
+      maxHours,
+    });
   },
 });
 

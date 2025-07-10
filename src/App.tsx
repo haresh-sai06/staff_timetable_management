@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Toaster } from "sonner";
 import Dashboard from "./components/Dashboard";
 import BackgroundImage from "./assets/images/campus.jpg";
-
+import { SignOutButton } from "./SignOutButton"; // Assuming SignOutButton is in a separate file
 
 export default function App() {
   return (
@@ -39,6 +39,7 @@ export default function App() {
               AUTONOMOUS INSTITUTION | ACCREDITED BY NAAC WITH ‘A’ GRADE
             </p>
           </div>
+          <SignOutButton />
         </header>
 
         <main className="flex-1 flex justify-center items-center px-4 py-8">
@@ -49,7 +50,6 @@ export default function App() {
     </div>
   );
 }
-
 
 function Content() {
   const currentUser = useQuery(api.users.getCurrentUser);

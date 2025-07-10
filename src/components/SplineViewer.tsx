@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Application } from "@splinetool/runtime";
 
 export default function SplineViewer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -9,23 +10,8 @@ export default function SplineViewer() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Load Spline runtime
-    const script = document.createElement("script");
-    script.type = "module";
-    script.src = "https://unpkg.com/@splinetool/runtime@1.9.28/build/runtime.js";
-    
-    script.onload = () => {
-      // @ts-ignore
-      const { Application } = window.SPLINE;
-      const app = new Application(canvas);
-      app.load("https://prod.spline.design/lCdYpF6pmPf5ji5f/scene.splinecode");
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      document.head.removeChild(script);
-    };
+    const app = new Application(canvas);
+    app.load("https://prod.spline.design/lCdYpF6pmPf5ji5f/scene.splinecode");
   }, []);
 
   return (

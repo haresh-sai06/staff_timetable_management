@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { internal } from "./_generated/api";
 
 async function requireAdmin(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -156,7 +157,7 @@ export const create = mutation({
     const user = await requireAdmin(ctx);
 
     // Check for conflicts
-    const conflictCheck = await ctx.runMutation("timetable:checkConflicts", args);
+    const conflictCheck = await ctx.runMutation(internal.timetable.checkConflicts, args);
     
     if (conflictCheck.hasConflicts) {
       throw new Error(`Conflicts detected: ${conflictCheck.conflicts.map(c => c.message).join(", ")}`);

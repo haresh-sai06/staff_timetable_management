@@ -22,6 +22,7 @@ import type * as router from "../router.js";
 import type * as staff from "../staff.js";
 import type * as subjects from "../subjects.js";
 import type * as timetable from "../timetable.js";
+import type * as updateRole from "../updateRole.js";
 import type * as users from "../users.js";
 
 /**
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   staff: typeof staff;
   subjects: typeof subjects;
   timetable: typeof timetable;
+  updateRole: typeof updateRole;
   users: typeof users;
 }>;
 export declare const api: FilterApi<

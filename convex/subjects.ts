@@ -27,16 +27,26 @@ export const list = query({
     semester: v.optional(v.union(v.literal("odd"), v.literal("even"))),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("subjects").filter((q) => q.eq(q.field("isActive"), true));
-    
+    let query;
+
     if (args.department && args.semester) {
-      query = query.withIndex("by_department_semester", (q: any) => 
-        q.eq("department", args.department).eq("semester", args.semester)
-      );
+      query = ctx.db
+        .query("subjects")
+        .withIndex("by_department_semester", (q: any) =>
+          q.eq("department", args.department).eq("semester", args.semester)
+        )
+        .filter((q) => q.eq(q.field("isActive"), true));
     } else if (args.department) {
-      query = query.filter((q) => q.eq(q.field("department"), args.department));
+      query = ctx.db
+        .query("subjects")
+        .filter((q) => q.eq(q.field("isActive"), true))
+        .filter((q) => q.eq(q.field("department"), args.department));
+    } else {
+      query = ctx.db
+        .query("subjects")
+        .filter((q) => q.eq(q.field("isActive"), true));
     }
-    
+
     return await query.collect();
   },
 });

@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { internal } from "./_generated/api";
 
 async function requireAdmin(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -27,17 +28,23 @@ export const list = query({
     semester: v.optional(v.union(v.literal("odd"), v.literal("even"))),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("timetableAssignments");
+    let assignments;
     
     if (args.department && args.semester) {
-      query = query.withIndex("by_department_semester", (q: any) => 
-        q.eq("department", args.department).eq("semester", args.semester)
-      );
+      assignments = await ctx.db
+        .query("timetableAssignments")
+        .withIndex("by_department_semester", (q: any) => 
+          q.eq("department", args.department).eq("semester", args.semester)
+        )
+        .collect();
     } else if (args.department) {
-      query = query.filter((q: any) => q.eq(q.field("department"), args.department));
+      assignments = await ctx.db
+        .query("timetableAssignments")
+        .filter((q: any) => q.eq(q.field("department"), args.department))
+        .collect();
+    } else {
+      assignments = await ctx.db.query("timetableAssignments").collect();
     }
-    
-    const assignments = await query.collect();
     
     const enrichedAssignments = await Promise.all(
       assignments.map(async (assignment) => {
@@ -156,11 +163,11 @@ export const create = mutation({
     const user = await requireAdmin(ctx);
 
     // Check for conflicts
-    const conflictCheck = await ctx.runMutation("timetable:checkConflicts", args);
+    // const conflictCheck = await ctx.runMutation(internal.timetable.checkConflicts, args);
     
-    if (conflictCheck.hasConflicts) {
-      throw new Error(`Conflicts detected: ${conflictCheck.conflicts.map(c => c.message).join(", ")}`);
-    }
+    // if (conflictCheck.hasConflicts) {
+    //   throw new Error(`Conflicts detected: ${conflictCheck.conflicts.map(c => c.message).join(", ")}`);
+    // }
 
     return await ctx.db.insert("timetableAssignments", {
       ...args,

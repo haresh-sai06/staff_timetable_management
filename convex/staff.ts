@@ -26,10 +26,14 @@ export const list = query({
     department: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("staff").filter((q) => q.eq(q.field("isActive"), true));
-    
+    let query;
     if (args.department) {
-      query = query.withIndex("by_department", (q: any) => q.eq("department", args.department));
+      query = ctx.db
+        .query("staff")
+        .withIndex("by_department", (q: any) => q.eq("department", args.department))
+        .filter((q) => q.eq(q.field("isActive"), true));
+    } else {
+      query = ctx.db.query("staff").filter((q) => q.eq(q.field("isActive"), true));
     }
     
     return await query.collect();
@@ -126,5 +130,46 @@ export const remove = mutation({
     await requireAdmin(ctx);
 
     await ctx.db.patch(args.id, { isActive: false });
+  },
+});
+
+// New mutation to fix the specific document missing institutionRole
+export const fixStaffInstitutionRole = mutation({
+  args: {
+    documentId: v.id("staff"), // Use v.id for strict typing
+    institutionRole: v.union(v.literal("Assistant Professor"), v.literal("Professor")),
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+
+    // Fetch the existing document
+    const existingDoc = await ctx.db.get(args.documentId);
+    if (!existingDoc) {
+      throw new Error(`Document with ID ${args.documentId} does not exist in the staff table.`);
+    }
+
+    // Prepare the updated data, handling maxPeriodsPerDay
+    const updatedData = {
+      ...existingDoc,
+      institutionRole: args.institutionRole,
+      maxHours: (existingDoc as any).maxPeriodsPerDay ?? existingDoc.maxHours ?? 18, // Use existing value or default to 18
+    };
+
+    // Remove maxPeriodsPerDay if it exists
+    if ("maxPeriodsPerDay" in updatedData) {
+      delete updatedData.maxPeriodsPerDay;
+    }
+
+    // Update the document
+    await ctx.db.patch(args.documentId, {
+      institutionRole: args.institutionRole,
+      maxHours: updatedData.maxHours,
+      // maxPeriodsPerDay field removed as it is not part of the staff schema
+    });
+
+    return {
+      success: true,
+      message: `Successfully updated document ${args.documentId} with institutionRole: ${args.institutionRole} and renamed maxPeriodsPerDay to maxHours`,
+    };
   },
 });

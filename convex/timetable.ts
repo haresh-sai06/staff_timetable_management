@@ -163,7 +163,11 @@ export const create = mutation({
     const user = await requireAdmin(ctx);
 
     // Check for conflicts
+<<<<<<< HEAD
     // const conflictCheck = await ctx.runMutation(internal.timetable.checkConflicts, args);
+=======
+    const conflictCheck = await ctx.runMutation(internal.timetable.checkConflicts, args);
+>>>>>>> 1550f400eb941d4866f02598f4beb9fc2f0434ac
     
     // if (conflictCheck.hasConflicts) {
     //   throw new Error(`Conflicts detected: ${conflictCheck.conflicts.map(c => c.message).join(", ")}`);
